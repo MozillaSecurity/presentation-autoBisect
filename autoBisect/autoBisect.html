@@ -1,0 +1,303 @@
+<!DOCTYPE HTML>
+<html lang="en-US" class="fade">
+<head>
+  <title>autoBisect</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1274, user-scalable=no">
+  <link rel="stylesheet" href="themes/mozilla/styles/style.css">
+  <style type="text/css">
+
+  </style>
+</head>
+<body class="list">
+
+  <header class="caption">
+    <h1>autoBisect</h1>
+    <p class="footer">Gary Kwong, <a href="mailto:gkw@mozilla.com">gkw@mozilla.com</a></p>
+  </header>
+
+  <div id="cover" class="slide"><div>
+    <section>
+      <header>
+        <h2>autoBisect</h2>
+      </header>
+      <footer class="byline">
+        Gary Kwong, Mozilla, Fuzzing Work Week, Mountain View, Aug 2014
+      </footer>
+    <footer class="notes">
+    </footer>
+    </section>
+  </div></div>
+
+  <div id="agenda" class="slide"><div>
+    <section>
+      <header>
+        <h2>Agenda</h2>
+      </header>
+      <ul>
+        <li>What is autoBisect?</li>
+        <li>Internals</li>
+        <li>Sample output</li>
+        <li>mozregression</li>
+        <li>Questions and answers</li>
+      </ul>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="what-is-autoBisect" class="slide"><div>
+    <section>
+      <header>
+        <h2>What is autoBisect?</h2>
+      </header>
+      <blockquote>
+        An automated bisection tool for the SpiderMonkey shell and Firefox browser
+        that supports <strong>compile-based</strong> and
+        <strong>download-based</strong> regression window hunting.
+      </blockquote>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="use-case" class="slide"><div>
+    <section>
+      <header>
+        <h2>Use case</h2>
+      </header>
+      <ul>Management tool
+        <li>Regression window indicates on <strong>which branch</strong> the bug exists</li>
+        <li>Helps narrow down <strong>patch developer</strong></li>
+        <li>May not be culprit, patch may have <strong>exposed latent bug</strong></li>
+      </ul>
+      Saves a lot of time "bouncing" bug from a person to another
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="internals" class="slide"><div>
+    <section>
+      <header>
+        <h2>autoBisect internals</h2>
+      </header>
+      <ul>Prerequisites
+        <li>Compile-based: mozilla-central repository (or mozilla-aurora, etc.)</li>
+        <li>Download-based: Internet connection</li>
+        <li>As much disk space as needed to store builds in autobisect-cache</li>
+      </ul>
+      Uses Mercurial's bisect command
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="internals2" class="slide"><div>
+    <section>
+      <header>
+        <h2>autoBisect internals (cont'd)</h2>
+      </header>
+      <ul>Bisection
+        <li>Start: Known earliest compilable changeset</li>
+        <li>End: Most recent changeset</li>
+      </ul>
+      Final bisection will be a range if some changesets skipped<p/>
+      <strong>Sometimes results are unreliable</strong>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="ignore-ranges" class="slide"><div>
+    <section>
+      <header>
+        <h2>Ignore ranges</h2>
+      </header>
+      <ul>Sometimes ranges cannot be compiled
+        <li>Build breakage</li>
+        <li>Can be branch/configuration-specific</li>
+      </ul>
+      Uses Mercurial's revset feature
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="time-taken" class="slide"><div>
+    <section>
+      <header>
+        <h2>Time taken for SpiderMonkey shell bisection result</h2>
+      </header>
+      <ul>Download-based
+        <li>1 minute (assuming fast internet)</li>
+        <li>Caveat 1: Must have internet connection</li>
+        <li>Caveat 2: Must be on a configuration already available on <a href="https://ftp.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds/">FTP</a></li>
+      </ul>
+      <ul>Compile-based
+        <li>30 - 45 minutes (assuming fast computer)</li>
+        <li>1 minute (if shells were cached)</li>
+        <li>Also works on slower ARM machines, e.g. <a href="http://www.hardkernel.com/main/products/prdt_info.php?g_code=G137463363079">ODROID XU+E</a></li>
+      </ul>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="sample-output" class="slide"><div>
+    <section>
+      <header>
+        <h1>Sample output</h1>
+      </header>
+      <pre>
+      <code>Rev 94ba78a42305: Found cached shell...</code>
+      <code>Testing... bad (Specified-bad output)  Finished testing</code>
+      <code>   the initial boundary revisions... This iteration</code>
+      <code>   took 2.115 seconds to run.</code>
+      <code>Rev e8558ecd9b16: Updating...</code>
+      <code>Compiling...</code>
+      <code>Testing... good (Exit code 0)  Finished testing the</code>
+      <code>   initial boundary revisions... This iteration took</code>
+      <code>   215.636 seconds to run.</code>
+      </pre>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="sample-output-2" class="slide"><div>
+    <section>
+      <header>
+        <h1>Sample output (cont'd)</h1>
+      </header>
+      <pre>
+      <code>Rev ab8a104509b4: Updating...</code>
+      <code>Compiling...</code>
+      <code>Testing... good (Exit code 0)  Bisecting for the</code>
+      <code>   n-th round where n is 1 and 2^n is 2 ... This</code>
+      <code>   iteration took 173.337 seconds to run.</code>
+      <code>      (/snip)</code>
+      <code>Rev 8e4e04daf2a6: Updating...</code>
+      <code>Compiling...</code>
+      <code>Testing... bad (Specified-bad output)  Bisecting for</code>
+      <code>   the n-th round where n is 11 and 2^n is 2048 ...</code>
+      </pre>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="sample-output-3" class="slide"><div>
+    <section>
+      <header>
+        <h1>Sample output (cont'd)</h1>
+      </header>
+      <pre>
+      <code>autoBisect shows this is probably related to the</code>
+      <code>  following changeset:</code>
+      <code></code>
+      <code>The first bad revision is:</code>
+      <code>changeset:   h.m.o/mozilla-central/rev/43acd23f5a98 *</code>
+      <code>user:        Brian Hackett</code>
+      <code>date:        Thu May 15 16:48:21 2014 -0700</code>
+      <code>summary:     Bug 976446 - Add port of irregexp regexp</code>
+      <code>  engine, and use by default, r=jandem.</code>
+      </pre>
+      * h.m.o shortened from hg.mozilla.org
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="sample-output-4" class="slide"><div>
+    <section>
+      <header>
+        <h1>Sample output (cont'd)</h1>
+      </header>
+      <pre>
+      <code>=== Tinderbox Build Bisection Results by autoBisect ===</code>
+      <code></code>
+      <code>The "good" changeset has the timestamp "20140626231828"</code>
+      <code>  and the hash "8f83a0ab5060".</code>
+      <code>The "bad" changeset has the timestamp "20140627003628"</code>
+      <code>  and the hash "72a548ec4f56".</code>
+      <code></code>
+      <code>Likely regression window: *</code>
+      <code>  pushloghtml?fromchange=8f83a0ab5060&tochange=72a548ec4f56</code>
+      </pre>
+      * <a href="https://hg.mozilla.org/integration/mozilla-inbound/pushloghtml?fromchange=8f83a0ab5060&tochange=72a548ec4f56">link</a>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="miscellaneous" class="slide"><div>
+    <section>
+      <header>
+        <h2>Miscellaneous</h2>
+      </header>
+      <ul>
+        <li>JSBugMon works w/autoBisect (most of the time)</li>
+        <li>Can be made to work with Firefox</li>
+      </ul>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="mozregression" class="slide"><div>
+    <section>
+      <header>
+        <h2>mozregression</h2>
+      </header>
+      <ul>Alternative tool, <a href="https://github.com/mozilla/mozregression">available on GitHub</a>
+        <li>Developed independently</li>
+        <li>Download-based</li>
+        <li>For nightly and inbound branches</li>
+        <li>Works with Firefox and Thunderbird</li>
+      </ul>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="qanda" class="slide"><div>
+    <section>
+      <header>
+        <h2>Questions & Answers</h2>
+      </header>
+      <footer class="notes">
+      </footer>
+    </section>
+  </div></div>
+
+  <div id="thanks" class="slide"><div>
+    <section>
+      <header>
+        <h2>Thanks</h2>
+      </header>
+        <figure class="frame middle swing">
+        <img src="pictures/mozillaoverview/redpanda.jpg"
+             alt="Red panda (Firefox)">
+        </figure>
+      <ul class="oneline demourl">
+        <li>Gary Kwong</li>
+        <li><a href="mailto:gkw@mozilla.com">gkw@mozilla.com</a></li>
+      <br/>Thanks also to Jesse Ruderman, Christian Holler and other folks whom I missed
+      </ul>
+      <small class="credits">
+        <a href="http://www.flickr.com/photos/yortw/5798336827/">
+          Photo by Yortw
+        </a>
+      </small>
+    <footer class="notes">
+      Thanks for listening!
+    </footer>
+    </section>
+  </div></div>
+
+  <div class="progress"><div></div></div>
+  <script src="scripts/script.js"></script>
+  <!-- Copyright © 2010–2012 Vadim Makeev — pepelsbey.net -->
+</body>
+</html>
